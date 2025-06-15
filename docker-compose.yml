@@ -1,0 +1,25 @@
+# docker-compose.yml
+version: '3.8' # Especifica la versión de la sintaxis de Docker Compose
+
+services:
+  # Servicio 1: La Base de Datos PostgreSQL
+  db:
+    image: postgres:16-alpine # Usa una imagen oficial y liviana de Postgres
+    container_name: canchas-db-local # Un nombre para identificar el contenedor
+    restart: always # Siempre intenta reiniciar el contenedor si se detiene
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: canchas_db
+    ports:
+      # Expone el puerto 5432 del contenedor al puerto 5433 de tu PC.
+      # Usamos 5433 para evitar conflictos si ya tenés Postgres instalado localmente.
+      - "5433:5432"
+    volumes:
+      # Guarda los datos en un "volumen" para que no se pierdan si reinicias el contenedor.
+      - postgres_data:/var/lib/postgresql/data
+
+# Define el volumen para la persistencia de datos
+volumes:
+  postgres_data:
+    driver: local
