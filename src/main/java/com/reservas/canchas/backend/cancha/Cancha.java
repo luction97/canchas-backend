@@ -1,7 +1,12 @@
 package com.reservas.canchas.backend.cancha;
 
-import com.reservas.canchas.backend.negocio.Negocio;
+import java.util.List;
 
+import com.reservas.canchas.backend.cancha.horario.HorarioDisponible;
+import com.reservas.canchas.backend.negocio.Negocio;
+import com.reservas.canchas.backend.turno.Turno;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -34,5 +40,11 @@ public class Cancha {
     @ManyToOne(fetch = FetchType.LAZY) // Muchas (Many) canchas pueden pertenecer a un (one) negocio
     @JoinColumn(name = "negocio_id", nullable = false) // Crea la columna 'negocio_id' en la tabla 'canchas'
     private Negocio negocio; // Relacion con Negocio
+
+    @OneToMany(mappedBy = "cancha", cascade = CascadeType.ALL, orphanRemoval = true) // Relación uno a muchos con Turno
+    private List<Turno> turnos;
+
+    @OneToMany(mappedBy = "cancha", cascade = CascadeType.ALL, orphanRemoval = true) // Relación uno a muchos con HorarioDisponible
+    private List<HorarioDisponible> horariosDisponibles;
 
 }

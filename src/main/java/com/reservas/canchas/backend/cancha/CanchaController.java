@@ -2,7 +2,13 @@ package com.reservas.canchas.backend.cancha;
 
 import com.reservas.canchas.backend.cancha.dto.CanchaDTO;
 import com.reservas.canchas.backend.cancha.dto.CrearCanchaDTO;
+import com.reservas.canchas.backend.cancha.horario.dto.CrearHorarioDTO;
+import com.reservas.canchas.backend.cancha.horario.dto.HorarioDTO;
+
 import io.swagger.v3.oas.annotations.Operation;
+
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,4 +29,18 @@ public class CanchaController {
         CanchaDTO canchaCreada = canchaService.crearCancha(crearDto);
         return new ResponseEntity<>(canchaCreada, HttpStatus.CREATED);
     }
+
+    @PostMapping("/{idCancha}/horarios")
+    public ResponseEntity<HorarioDTO> agregarHorario(
+            @PathVariable Long idCancha,
+            @RequestBody CrearHorarioDTO crearHorarioDTO) {
+        HorarioDTO horarioCreado = canchaService.agregarHorario(idCancha, crearHorarioDTO);
+        return new ResponseEntity<>(horarioCreado, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{idCancha}/horarios")
+    public List<HorarioDTO> obtenerHorariosPorCancha(@PathVariable Long idCancha) {
+        return canchaService.obtenerHorariosPorCancha(idCancha);
+    }
+
 }

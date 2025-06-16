@@ -17,6 +17,6 @@ public interface CanchaMapper {
     // el campo 'negocio'. Déjalo en null. El CanchaService se encargará de él".
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "negocio", ignore = true)
+    @Mapping(target = "horariosDisponibles", ignore = true)
     Cancha toEntity(CrearCanchaDTO canchaDTO);
-
 }
