@@ -9,5 +9,6 @@ import org.springframework.stereotype.Repository;
 public interface HorarioDisponibleRepository extends JpaRepository<HorarioDisponible, Long> {
 
     List<HorarioDisponible> findByCanchaId(Long canchaId);
+    List<HorarioDisponible> findByCanchaIdAndDiaSemana(Long canchaId, DiaSemana diaSemana);
 
 }

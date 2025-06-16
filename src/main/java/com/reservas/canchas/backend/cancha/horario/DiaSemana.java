@@ -1,5 +1,7 @@
 package com.reservas.canchas.backend.cancha.horario;
 
+import java.time.DayOfWeek;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -44,5 +46,18 @@ public enum DiaSemana {
         }
         // Si no encuentra ninguna coincidencia, lanza un error claro.
         throw new IllegalArgumentException("Día de la semana no válido: " + text);
+    }
+
+    // --- MÉTODO DE TRADUCCIÓN A CLASES JAVA ---
+    public static DiaSemana fromJavaDayOfWeek(DayOfWeek javaDay) {
+        return switch (javaDay) {
+            case MONDAY -> LUNES;
+            case TUESDAY -> MARTES;
+            case WEDNESDAY -> MIERCOLES;
+            case THURSDAY -> JUEVES;
+            case FRIDAY -> VIERNES;
+            case SATURDAY -> SABADO;
+            case SUNDAY -> DOMINGO;
+        };
     }
 }

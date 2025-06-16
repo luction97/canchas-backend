@@ -2,6 +2,7 @@ package com.reservas.canchas.backend.turno;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.reservas.canchas.backend.turno.dto.CrearTurnoDto;
+import com.reservas.canchas.backend.turno.dto.GrillaTurnoDTO;
 import com.reservas.canchas.backend.turno.dto.TurnoDto;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,9 +37,7 @@ public class TurnoController {
     @PostMapping
     public ResponseEntity<TurnoDto> crearTurno(
             @PathVariable Long idCancha,
-            @RequestBody
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos del turno a crear", required = true)
-            CrearTurnoDto crearTurnoDto) {
+            @RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos del turno a crear", required = true) CrearTurnoDto crearTurnoDto) {
         TurnoDto turnoCreado = turnoService.crearTurno(idCancha, crearTurnoDto);
         return new ResponseEntity<>(turnoCreado, HttpStatus.CREATED);
     }
@@ -48,5 +48,12 @@ public class TurnoController {
             @PathVariable Long idCancha,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
         return turnoService.obtenerTurnosPorDia(idCancha, fecha);
+    }
+
+    @GetMapping("/public/grilla-semanal")
+    public Map<LocalDate, List<GrillaTurnoDTO>> obtenerGrillaSemanal(
+            @PathVariable Long idCancha,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha_inicio) {
+        return turnoService.generarGrillaSemanal(idCancha, fecha_inicio);
     }
 }
