@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.reservas.canchas.backend.turno.dto.CrearTurnoDto;
-import com.reservas.canchas.backend.turno.dto.GrillaTurnoDTO;
 import com.reservas.canchas.backend.turno.dto.TurnoDto;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,10 +49,10 @@ public class TurnoController {
         return turnoService.obtenerTurnosPorDia(idCancha, fecha);
     }
 
-    @GetMapping("/public/grilla-semanal")
+   /* @GetMapping("/public/grilla-semanal")
     public Map<LocalDate, List<GrillaTurnoDTO>> obtenerGrillaSemanal(
             @PathVariable Long idCancha,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha_inicio) {
         return turnoService.generarGrillaSemanal(idCancha, fecha_inicio);
-    }
+    } */
 }

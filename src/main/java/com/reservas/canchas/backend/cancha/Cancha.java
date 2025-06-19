@@ -1,5 +1,6 @@
 package com.reservas.canchas.backend.cancha;
 
+import java.time.LocalTime;
 import java.util.List;
 
 import com.reservas.canchas.backend.cancha.horario.HorarioDisponible;
@@ -44,7 +45,16 @@ public class Cancha {
     @OneToMany(mappedBy = "cancha", cascade = CascadeType.ALL, orphanRemoval = true) // Relación uno a muchos con Turno
     private List<Turno> turnos;
 
-    @OneToMany(mappedBy = "cancha", cascade = CascadeType.ALL, orphanRemoval = true) // Relación uno a muchos con HorarioDisponible
+    @OneToMany(mappedBy = "cancha", cascade = CascadeType.ALL, orphanRemoval = true) // Relación uno a muchos con
+                                                                                     // HorarioDisponible
     private List<HorarioDisponible> horariosDisponibles;
+
+    // Estos campos pueden ser nulos. Si lo son, significa que la cancha
+    // no tiene un horario general y solo abre en los días con reglas específicas.
+    @Column(name = "hora_apertura_general")
+    private LocalTime horaAperturaGeneral;
+    
+    @Column(name = "hora_cierre_general")
+    private LocalTime horaCierreGeneral;
 
 }

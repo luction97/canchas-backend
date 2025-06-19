@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -59,58 +60,63 @@ public class TurnoService {
         return turnoMapper.toDtoList(turnos);
     }
 
-    // --- MÉTODO FINAL Y CORREGIDO PARA GENERAR LA GRILLA SEMANAL ---
     public Map<LocalDate, List<GrillaTurnoDTO>> generarGrillaSemanal(Long idCancha, LocalDate fechaInicioSemana) {
-        // 1. Buscamos todos los turnos ya reservados para la semana completa en una
-        // sola consulta.
+        // 1. Buscamos la entidad Cancha completa para tener acceso a su horario general.
+        Cancha cancha = canchaRepository.findById(idCancha)
+                .orElseThrow(() -> new RuntimeException("Cancha no encontrada con ID: " + idCancha));
+
+        // 2. Obtenemos todos los turnos reservados para la semana.
         LocalDateTime inicioSemana = fechaInicioSemana.atStartOfDay();
         LocalDateTime finSemana = fechaInicioSemana.plusDays(7).atStartOfDay();
-        List<Turno> turnosDeLaSemana = turnoRepository.findByCanchaIdAndFechaHoraInicioBetween(idCancha, inicioSemana,
-                finSemana);
+        List<Turno> turnosDeLaSemana = turnoRepository.findByCanchaIdAndFechaHoraInicioBetween(idCancha, inicioSemana, finSemana);
+        
+        // Creamos un mapa donde el valor es el objeto Turno completo para poder acceder al nombre del cliente.
+        Map<LocalDateTime, Turno> mapaTurnosOcupados = turnosDeLaSemana.stream()
+                .collect(Collectors.toMap(Turno::getFechaHoraInicio, turno -> turno));
 
-        // 2. Creamos un mapa para poder buscar rápidamente si un turno está ocupado. La
-        // clave será la fecha y hora exactas, y el valor será el estado del turno.
-        Map<LocalDateTime, String> mapaTurnosOcupados = turnosDeLaSemana.stream()
-                .collect(Collectors.toMap(Turno::getFechaHoraInicio, turno -> turno.getEstado().name()));
-
-        // 3. Preparamos el mapa que devolveremos. Usamos LinkedHashMap para que los
-        // días se mantengan en orden.
         Map<LocalDate, List<GrillaTurnoDTO>> grillaSemanal = new LinkedHashMap<>();
 
-        // 4. Iteramos por cada uno de los 7 días de la semana que queremos mostrar.
+        // 3. Iteramos por cada día de la semana.
         for (int i = 0; i < 7; i++) {
             LocalDate diaActual = fechaInicioSemana.plusDays(i);
+            DiaSemana nuestroDiaDeLaSemana = DiaSemana.fromJavaDayOfWeek(diaActual.getDayOfWeek());
+            
+            // 4. Lógica para determinar el horario de apertura y cierre.
+            List<HorarioDisponible> horariosEspecificos = horarioRepository.findByCanchaIdAndDiaSemana(idCancha, nuestroDiaDeLaSemana);
+            LocalTime horaInicio;
+            LocalTime horaFin;
 
-            // Obtenemos el DayOfWeek estándar de Java para poder buscar en nuestras reglas.
-            DayOfWeek diaDeLaSemanaJava = diaActual.getDayOfWeek();
-            DiaSemana nuestroDiaDeLaSemana = DiaSemana.fromJavaDayOfWeek(diaDeLaSemanaJava);
+            if (!horariosEspecificos.isEmpty()) {
+                horaInicio = horariosEspecificos.get(0).getHoraInicio();
+                horaFin = horariosEspecificos.get(0).getHoraFin();
+            } else {
+                horaInicio = cancha.getHoraAperturaGeneral();
+                horaFin = cancha.getHoraCierreGeneral();
+            }
 
+            // 5. Lógica para generar los slots con el cliente.
             List<GrillaTurnoDTO> turnosDelDia = new ArrayList<>();
-
-            // Buscamos las reglas de horario (ej: "Lunes de 18 a 23") para este día, usando
-            // nuestro Enum.
-            List<HorarioDisponible> rangosHorario = horarioRepository.findByCanchaIdAndDiaSemana(idCancha,
-                    nuestroDiaDeLaSemana);
-
-            // 5. Generamos los "slots" de una hora para cada rango de horario que
-            // encontramos.
-            for (HorarioDisponible rango : rangosHorario) {
-                LocalTime horaActual = rango.getHoraInicio();
-                while (horaActual.isBefore(rango.getHoraFin())) {
+            if (horaInicio != null && horaFin != null) {
+                LocalTime horaActual = horaInicio;
+                while (horaActual.isBefore(horaFin)) {
                     LocalDateTime fechaHoraActual = diaActual.atTime(horaActual);
-
-                    // Usamos el mapa para ver si el slot está ocupado. Si no está en el mapa, está
-                    // "LIBRE".
-                    String estado = mapaTurnosOcupados.getOrDefault(fechaHoraActual, "LIBRE");
-                    turnosDelDia.add(new GrillaTurnoDTO(horaActual, estado));
-
-                    horaActual = horaActual.plusHours(1); // Pasamos a la siguiente hora
+                    
+                    // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+                    if (mapaTurnosOcupados.containsKey(fechaHoraActual)) {
+                        // Si el turno está ocupado, obtenemos el objeto Turno completo.
+                        Turno turnoOcupado = mapaTurnosOcupados.get(fechaHoraActual);
+                        turnosDelDia.add(new GrillaTurnoDTO(horaActual, turnoOcupado.getEstado().name(), turnoOcupado.getNombreCliente()));
+                        // Creamos el DTO con los 3 argum
+                    } else {
+                        // Si el turno está libre, creamos el DTO con el estado LIBRE y null para el cliente.
+                        turnosDelDia.add(new GrillaTurnoDTO(horaActual, "LIBRE", null));
+                    }
+                    
+                    horaActual = horaActual.plusHours(1);
                 }
             }
             grillaSemanal.put(diaActual, turnosDelDia);
         }
-
         return grillaSemanal;
     }
-
 }

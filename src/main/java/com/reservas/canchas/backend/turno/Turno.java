@@ -33,9 +33,13 @@ public class Turno {
     @Column(nullable = false)
     private LocalDateTime fechaHoraInicio; // Guarda la fecha y hora exactas del inicio del turno
 
-    @Enumerated(EnumType.STRING) // Le dice a JPA que guarde el nombre del estado ("RESERVADO") como texto en la                            // BD
+    @Enumerated(EnumType.STRING) // Le dice a JPA que guarde el nombre del estado ("RESERVADO") como texto en la
+                                 // // BD
     @Column(nullable = false)
     private EstadoTurno estado;
+
+    @Column(length = 100)
+    private String nombreCliente;
 
     @ManyToOne(fetch = FetchType.LAZY) // Relación con Cancha, se carga de forma perezosa
     @JoinColumn(name = "cancha_id", nullable = false) // Columna que referencia a la cancha
