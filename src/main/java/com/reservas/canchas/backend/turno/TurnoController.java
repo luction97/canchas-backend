@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.reservas.canchas.backend.turno.dto.CrearTurnoDto;
+import com.reservas.canchas.backend.turno.dto.CrearTurnoDTO;
 import com.reservas.canchas.backend.turno.dto.TurnoDto;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +36,7 @@ public class TurnoController {
     @PostMapping
     public ResponseEntity<TurnoDto> crearTurno(
             @PathVariable Long idCancha,
-            @RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos del turno a crear", required = true) CrearTurnoDto crearTurnoDto) {
+            @RequestBody @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos del turno a crear", required = true) CrearTurnoDTO crearTurnoDto) {
         TurnoDto turnoCreado = turnoService.crearTurno(idCancha, crearTurnoDto);
         return new ResponseEntity<>(turnoCreado, HttpStatus.CREATED);
     }

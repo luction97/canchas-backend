@@ -11,27 +11,30 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class WebConfig {
 
-    // Creamos un "Bean" que define nuestra configuración de CORS.
-    // Spring Security buscará y usará automáticamente un bean de este tipo.
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        
+        // --- CONFIGURACIÓN PARA DESARROLLO ---
+        // Permite peticiones desde cualquier origen. Esto es ideal para las pruebas locales
+        // y en dispositivos móviles, ya que no tenemos que preocuparnos por la IP cambiante.
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        
+        // --- CONFIGURACIÓN PARA PRODUCCIÓN (EJEMPLO) ---
+        // Cuando despliegues tu aplicación, deberías comentar la línea de arriba y
+        // descomentar esta, reemplazando la URL por tu dominio real.
+        // configuration.setAllowedOrigins(List.of("https://www.tuapp.com"));
 
-        // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
-        // Definimos todos los orígenes permitidos en una única lista.
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:5175"));
-
+        
+        // Configuración estándar de métodos, cabeceras y credenciales.
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
-
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplicamos esta configuración a todas las rutas de nuestra API.
+        // Aplicamos esta configuración a todas las rutas que comiencen con /api/
         source.registerCorsConfiguration("/api/**", configuration);
-
+        
         return source;
     }
 }

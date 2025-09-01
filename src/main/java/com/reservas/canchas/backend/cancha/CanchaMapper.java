@@ -15,5 +15,6 @@ public interface CanchaMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "negocio", ignore = true)
     @Mapping(target = "horariosDisponibles", ignore = true)
+    @Mapping(target = "turnos", ignore = true)
     Cancha toEntity(CrearCanchaDTO canchaDTO);
 }

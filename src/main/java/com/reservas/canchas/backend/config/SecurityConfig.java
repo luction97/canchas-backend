@@ -1,35 +1,35 @@
 package com.reservas.canchas.backend.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+@RequiredArgsConstructor
+public class SecurityConfig { // Define quién puede entrar, y a qué puede acceder
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthenticationProvider authenticationProvider;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // --- ¡AQUÍ ESTÁ LA NUEVA LÍNEA! ---
-                // Le decimos a Spring Security que use la configuración de CORS que definimos
-                // en nuestro bean 'corsConfigurationSource'.
-                .cors(withDefaults())
-
-                // Deshabilitamos CSRF, una práctica común para APIs REST stateless.
-                .csrf(csrf -> csrf.disable())
-
-                .authorizeHttpRequests(auth -> auth
-                        // Tus reglas de autorización (estas no cambian)
-                        .requestMatchers("/api/public/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        //.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/**").permitAll()
-                        .anyRequest().authenticated())
-                .formLogin(withDefaults());
-
+            .cors(withDefaults())
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**", "/api/public/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authenticationProvider)
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

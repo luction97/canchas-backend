@@ -18,7 +18,8 @@ import com.reservas.canchas.backend.cancha.CanchaRepository;
 import com.reservas.canchas.backend.cancha.horario.DiaSemana;
 import com.reservas.canchas.backend.cancha.horario.HorarioDisponible;
 import com.reservas.canchas.backend.cancha.horario.HorarioDisponibleRepository;
-import com.reservas.canchas.backend.turno.dto.CrearTurnoDto;
+import com.reservas.canchas.backend.turno.dto.CrearTurnoDTO;
+import com.reservas.canchas.backend.turno.dto.GrillaPublicaDTO;
 import com.reservas.canchas.backend.turno.dto.GrillaTurnoDTO;
 import com.reservas.canchas.backend.turno.dto.TurnoDto;
 
@@ -38,7 +39,7 @@ public class TurnoService {
         this.horarioRepository = horarioRepository;
     }
 
-    public TurnoDto crearTurno(Long idCancha, CrearTurnoDto crearTurnoDto) {
+    public TurnoDto crearTurno(Long idCancha, CrearTurnoDTO crearTurnoDto) {
 
         Cancha cancha = canchaRepository.findById(idCancha)
                 .orElseThrow(() -> new RuntimeException("Cancha no encontrada con ID: " + idCancha));
@@ -60,17 +61,18 @@ public class TurnoService {
         return turnoMapper.toDtoList(turnos);
     }
 
-    public Map<LocalDate, List<GrillaTurnoDTO>> generarGrillaSemanal(Long idCancha, LocalDate fechaInicioSemana) {
-        // 1. Buscamos la entidad Cancha completa para tener acceso a su horario general.
+    public GrillaPublicaDTO generarGrillaSemanal(Long idCancha, LocalDate fechaInicioSemana) {
+        // 1. Buscamos la entidad Cancha completa para obtener su horario general y su
+        // Negocio.
         Cancha cancha = canchaRepository.findById(idCancha)
                 .orElseThrow(() -> new RuntimeException("Cancha no encontrada con ID: " + idCancha));
 
-        // 2. Obtenemos todos los turnos reservados para la semana.
+        // 2. Buscamos todos los turnos reservados de la semana.
         LocalDateTime inicioSemana = fechaInicioSemana.atStartOfDay();
         LocalDateTime finSemana = fechaInicioSemana.plusDays(7).atStartOfDay();
-        List<Turno> turnosDeLaSemana = turnoRepository.findByCanchaIdAndFechaHoraInicioBetween(idCancha, inicioSemana, finSemana);
-        
-        // Creamos un mapa donde el valor es el objeto Turno completo para poder acceder al nombre del cliente.
+        List<Turno> turnosDeLaSemana = turnoRepository.findByCanchaIdAndFechaHoraInicioBetween(idCancha, inicioSemana,
+                finSemana);
+
         Map<LocalDateTime, Turno> mapaTurnosOcupados = turnosDeLaSemana.stream()
                 .collect(Collectors.toMap(Turno::getFechaHoraInicio, turno -> turno));
 
@@ -80,9 +82,9 @@ public class TurnoService {
         for (int i = 0; i < 7; i++) {
             LocalDate diaActual = fechaInicioSemana.plusDays(i);
             DiaSemana nuestroDiaDeLaSemana = DiaSemana.fromJavaDayOfWeek(diaActual.getDayOfWeek());
-            
-            // 4. Lógica para determinar el horario de apertura y cierre.
-            List<HorarioDisponible> horariosEspecificos = horarioRepository.findByCanchaIdAndDiaSemana(idCancha, nuestroDiaDeLaSemana);
+
+            List<HorarioDisponible> horariosEspecificos = horarioRepository.findByCanchaIdAndDiaSemana(idCancha,
+                    nuestroDiaDeLaSemana);
             LocalTime horaInicio;
             LocalTime horaFin;
 
@@ -94,29 +96,29 @@ public class TurnoService {
                 horaFin = cancha.getHoraCierreGeneral();
             }
 
-            // 5. Lógica para generar los slots con el cliente.
             List<GrillaTurnoDTO> turnosDelDia = new ArrayList<>();
             if (horaInicio != null && horaFin != null) {
                 LocalTime horaActual = horaInicio;
                 while (horaActual.isBefore(horaFin)) {
                     LocalDateTime fechaHoraActual = diaActual.atTime(horaActual);
-                    
-                    // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+
                     if (mapaTurnosOcupados.containsKey(fechaHoraActual)) {
-                        // Si el turno está ocupado, obtenemos el objeto Turno completo.
                         Turno turnoOcupado = mapaTurnosOcupados.get(fechaHoraActual);
-                        turnosDelDia.add(new GrillaTurnoDTO(horaActual, turnoOcupado.getEstado().name(), turnoOcupado.getNombreCliente()));
-                        // Creamos el DTO con los 3 argum
+                        turnosDelDia.add(new GrillaTurnoDTO(horaActual, turnoOcupado.getEstado().name(),
+                                turnoOcupado.getNombreCliente()));
                     } else {
-                        // Si el turno está libre, creamos el DTO con el estado LIBRE y null para el cliente.
                         turnosDelDia.add(new GrillaTurnoDTO(horaActual, "LIBRE", null));
                     }
-                    
                     horaActual = horaActual.plusHours(1);
                 }
             }
             grillaSemanal.put(diaActual, turnosDelDia);
         }
-        return grillaSemanal;
+
+        // 4. Obtenemos el número de celular a través de la relación Cancha -> Negocio.
+        String nroCelular = cancha.getNegocio().getNroCelular();
+
+        // 5. Devolvemos el nuevo DTO combinado.
+        return new GrillaPublicaDTO(grillaSemanal, nroCelular);
     }
 }
