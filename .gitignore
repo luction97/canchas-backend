@@ -1,28 +1,33 @@
-# Archivos de Log
+# =========================
+# Archivos de compilación
+# =========================
+target/
+build/
+*.class
 *.log
 
-# Archivos compilados de Java y paquetes
-/target/
-*.jar
-*.war
-*.ear
-
-# Archivos del IDE
-.idea/
+# =========================
+# IDEs
+# =========================
+# IntelliJ IDEA
 *.iml
-*.project
-*.classpath
+.idea/
+
+# Eclipse
+.classpath
+.project
 .settings/
+
+# VS Code
 .vscode/
 
-# Archivos del Sistema Operativo
+# =========================
+# Archivos de sistema
+# =========================
 .DS_Store
 Thumbs.db
 
-# Archivos de dependencia de Node
-node_modules/
-npm-debug.log
-
-# Archivos de configuración locales que pueden contener secretos
-application-local.properties
+# =========================
+# Variables de entorno
+# =========================
 .env
