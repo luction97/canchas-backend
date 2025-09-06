@@ -4,8 +4,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum EstadoTurno {
+    DISPONIBLE("DISPONIBLE"),
     RESERVADO("RESERVADO"),
-    BUSCA_RIVAL("BUSCA_RIVAL");
+    BUSCA_RIVAL("BUSCA_RIVAL"),
+    CANCELADO("CANCELADO"),
+    COMPLETADO("COMPLETADO");
 
     private final String estado;
 
